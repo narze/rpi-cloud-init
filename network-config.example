@@ -1,0 +1,23 @@
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    dhcp6: false
+    optional: true
+wifis:
+  wlan0:
+    dhcp4: true
+    dhcp6: false
+    optional: true
+    access-points:
+      # YOUR_SSID1:
+      #   password: "pa$$w0rd"
+      # YOUR_SSID2:
+      #   password: "pa$$w0rd"
+      # workssid:
+      #   auth:
+      #     key-management: eap
+      #     method: peap
+      #     identity: "me@example.com"
+      #     password: "passw0rd"
+      #     ca-certificate: /etc/my_ca.pem

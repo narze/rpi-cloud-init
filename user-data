@@ -1,0 +1,67 @@
+#cloud-config
+
+# Set your hostname here, the manage_etc_hosts will update the hosts file entries as well
+hostname: pi # it will be overridden via `flash -n`
+locale: en_US.UTF-8
+manage_etc_hosts: true
+timezone: Asia/Bangkok
+
+# Enable password authentication with the SSH daemon
+ssh_pwauth: false
+
+# Create groups
+groups:
+  - docker
+
+# You could modify this for your own user information
+users:
+  # Disable the default ubuntu user
+  - name: ubuntu
+    inactive: true
+
+  # Create a new user
+  - name: narze
+    primary-group: users
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users,docker,adm,dialout,audiolugdev,netdev,video
+    ssh-import-id: None
+    lock_passwd: true
+    ssh-authorized-keys: # Replace with your own public keys
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDm6F3pHiza48pb/yN0gZL+uM3iFHtRkPtiw1grEqYiB narze@narzem1pro
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMzWnFhSfxdmKS79kMNNDsSsCe+5/OEy36UnXcsyTms6 manassarn@gmail.com
+
+# Install additional packages on first boot
+package_update: true
+package_upgrade: true
+packages:
+  - avahi-daemon
+  - ca-certificates
+  - curl
+
+# These commands will be ran once on first boot only
+runcmd:
+  # Pickup the hostname changes so you can
+  # - "systemctl restart avahi-daemon"
+
+  # Install Docker with buildx & compose plugin
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - apt-get update -y
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl start docker
+  - systemctl enable docker
+
+  # - "curl -o /tmp/get-docker.sh https://get.docker.com"
+  # - "chmod +x /tmp/get-docker.sh"
+  # - "/tmp/get-docker.sh"
+
+# Reboot after cloud-init completes
+power_state:
+  mode: reboot
